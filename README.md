@@ -1,20 +1,11 @@
-# photo
 # 🔍 Image Similarity Search Engine  
-
-![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)  
-![Flask](https://img.shields.io/badge/Flask-Backend-green?logo=flask)  
-![Torch](https://img.shields.io/badge/PyTorch-ResNet18-red?logo=pytorch)  
-![License](https://img.shields.io/badge/License-MIT-lightgrey)  
-
-A **deep learning–powered search engine** that lets you upload an image (or provide an image URL) and instantly find **visually similar products** from a catalog 📦.  
-
-Using **ResNet18 embeddings** + **cosine similarity**, the system ranks catalog items most similar to the query image.  
-
+  
+A **deep learning–powered** visual search engine that lets you upload an image (or paste a URL) and instantly find visually similar products from a catalog 🛍️. It uses **MobileNetV2 embeddings + cosine similarity** to rank catalog items most similar to the query image. 📦.  
+ 
 ---
 
 ## 🌐 Live Demo  
-
-🚀 *Coming Soon* (Will update once deployed)  
+https://photo-analyzer-al39.onrender.com/ 
 <!-- Example placeholders for deployment -->
 <!-- [Frontend Live](#) | [Backend API](#) -->
 
@@ -26,7 +17,7 @@ Using **ResNet18 embeddings** + **cosine similarity**, the system ranks catalog 
 - 📷 **Query by Image Upload or URL** (supports remote & local images)  
 - 🧠 **Deep Learning Embeddings** using pretrained ResNet18 (ImageNet)  
 - 📊 **Cosine Similarity Search** across catalog embeddings  
-- 🎛 Adjustable **Similarity Threshold** (default 70%)  
+- 🎛  Adjustable **Similarity Threshold** (default 70%)  
 - ⚡ **Fast Caching** of images & embeddings  
 - 🎨 Simple, responsive **Flask + HTML UI**  
 
@@ -35,28 +26,39 @@ Using **ResNet18 embeddings** + **cosine similarity**, the system ranks catalog 
 ## 🗂 Project Structure  
 
 ```bash
-image-similarity-search/
-├─ backend/
-│  ├─ app.py             # Flask backend (routes, embedding, search)
-│  ├─ data/
-│  │   ├─ products.csv   # Catalog metadata (id, name, price, img_url)
-│  │   └─ index.csv      # Cached embeddings (auto-generated)
-│  ├─ cache/             # Downloaded/cached images
-│  └─ templates/
-│      └─ index.html     # Web frontend (UI)
+photo-analyzer/
+├─ app.py                 # Flask backend (routes, embedding, search)
+├─ build_index.py         # Generates index.csv from products.csv
+├─ download_model.py      # Downloads & saves MobileNetV2 locally
+├─ data/
+│   ├─ products.csv       # Catalog metadata (id, name, price, img_url)
+│   └─ index.csv          # Precomputed embeddings
+├─ models/
+│   └─ mobilenet_v2_140_224/   # Saved TensorFlow Hub model
+├─ static/
+│   ├─ images/            # Local product images
+│   └─ styles.css         # Custom styles
+├─ templates/
+│   └─ index.html         # Web frontend (UI)
+├─ requirements.txt       # Python dependencies
+├─ Dockerfile             # Docker container setup
+├─ render.yaml            # Render deployment config
+└─ runtime.txt            # Python runtime version
 ```
 # 🔎 How It Works  
 
 ## 1️⃣ Indexing  
 - Reads `products.csv`  
-- Downloads catalog images (or loads from `/static/`)  
-- Extracts **512-D embeddings** using pretrained **ResNet18**  
+- Downloads or loads product images  
+- Extracts **1280-D** embeddings using pretrained **MobileNetV2**
 - Saves them in `index.csv`  
 
 ## 2️⃣ Query  
-- User uploads an image / pastes a URL  
-- Extracts embedding vector  
-- Computes **cosine similarity** against catalog  
+- User uploads an image or provides a URL
+- Preprocess → extract embedding vector
+- Compute cosine similarity against all catalog embeddings
+- Sort matches by similarity score
+- Display name, category, price, image, similarity score
 
 ## 3️⃣ Results  
 - Filters matches ≥ threshold (default 70%)  
@@ -66,38 +68,49 @@ image-similarity-search/
 ---
 # 🧭 Approach  
 
-This project follows a **deep learning feature extraction + similarity matching** pipeline to deliver fast and accurate visual search results. The catalog is first indexed by reading `products.csv`, which contains product metadata such as id, name, category, price, and image path or URL. Each product image is processed using a **pretrained ResNet18 model**, where the final fully connected layer is removed to obtain **512-dimensional feature embeddings**. These embeddings capture the visual characteristics of each image and are stored in `index.csv` for quick reloading.  
-
-When a user uploads an image or provides a remote URL, the system applies the same preprocessing and embedding extraction process. The query embedding is then compared with catalog embeddings using **cosine similarity**, which measures how close the images are in high-dimensional feature space. Results above a configurable threshold (e.g., 70%) are retrieved, sorted, and displayed with product details and similarity scores.  
-
-The system ensures efficiency through caching, so repeated queries or previously downloaded images are processed faster. By combining **PyTorch** for embeddings, **Flask** for serving, and **Pandas/NumPy** for data handling, this project demonstrates how deep learning can power real-world applications like e-commerce visual search engines.  
-
+### Catalog Preparation & Indexing
+- Process all images and metadata from `products.csv`
+- Each image is passed through **MobileNetV2 (pretrained on ImageNet)** to generate a *1280-dimensional embedding**.
+- Embeddings are normalized and saved to `index.csv` for fast lookup during runtime.
+### Query Processing
+- When a user uploads an image or provides a URL, the same embedding process is applied.
+- The query image is converted into a `1280-D vector`.
+### Similarity Computation
+- **Cosine similarity** is calculated between the query embedding and catalog embeddings.
+- This measures how visually similar the images are in feature space.
+### Result Retrieval & Ranking
+- Catalog embeddings are sorted by similarity score.
+- Top-N most similar products are selected.
+- Output includes product name, category, price, image, and similarity score.
+### Optimizations
+- Images and embeddings are cached for faster queries.
+- CSV-based indexing is lightweight and efficient for small to medium catalogs.
 ---
 
 # 🛠 Tech Stack  
 
-- **Backend** → Flask, Pandas, NumPy, Torch, Torchvision, Pillow, Requests  
+- **Backend** → Flask, Pandas, NumPy, Pillow, Requests
 - **Model** → Pretrained ResNet18 (ImageNet features)  
 - **Frontend** → HTML, CSS, Bootstrap (Flask templates)  
-- **Storage** → CSV-based lightweight indexing  
+- **Storage** → CSV-based lightweight indexing (products.csv, index.csv)  
 - **Deployment** → Flask (Docker / Render / Heroku supported)  
 
+Deployment: Docker + Render
 ---
 
 # 🚀 Getting Started (Local)  
 
 ## 1️⃣ Clone the repo  
 ```bash
-git clone https://github.com/your-username/image-similarity-search.git
-cd image-similarity-search/backend
+git clone https://github.com/your-username/photo-analyzer.git
+cd photo-analyzer
 ```
 ## 2️⃣ Setup environment
 ``` bash
 python -m venv .venv
-# Activate:
+# Activate
 # Windows: .venv\Scripts\activate
 # Linux/Mac: source .venv/bin/activate
-
 pip install -r requirements.txt
 ```
 ### 📌 requirements.txt
@@ -113,48 +126,49 @@ requests
 ## 3️⃣ Prepare catalog data
 - Create/edit backend/data/products.csv like:
 ``` csv
-id,name,category,price,image_url
-1,Red Shirt,Clothing,499,static/images/redshirt.jpg
-2,Blue Jeans,Clothing,999,https://example.com/bluejeans.jpg
+id,name,category,image_url,price
+1,Product 1 (Tops),Tops,static/images/item001.jpg,9.99
+2,Product 2 (Shoes),Shoes,static/images/item002.jpg,15.19
 ```
 ## 4️⃣ Run backend
 ``` bash
 python app.py
 ```
-## App runs at → http://127.0.0.1:5000
-
-## 5️⃣ Open UI
+### App runs at → http://127.0.0.1:5000
 
 ### Go to browser → upload an image / paste URL → see results 🚀
 
-## 🧪 Example Inputs
-### ✅ Remote Image URL
-``` bash
-https://upload.wikimedia.org/wikipedia/commons/9/99/Black_square.jpg
-```
-### ✅ Local Static File
-``` bash
-static/images/item001.jpg
-```
 ### 📡 API Reference
 `🔸 POST /search`
 ### 📌 Form-Data Params
 - `file` → uploaded image *(optional)*
 - `image_url` → string *(optional)*
-- `threshold` → number *(default: 70 → cosine ≥ 0.70)*
-
 ---
 
-### 📤 Response
-HTML page with:
-- List of top matches  
-- Similarity scores
+### 📤 Response Example
+``` json
+{
+  "results": [
+    {
+      "id": 1,
+      "name": "Product 1 (Tops)",
+      "category": "Tops",
+      "price": 9.99,
+      "image_src": "static/images/item001.jpg",
+      "score": 0.9231
+    }
+  ]
+}
+```
+## 📊 Dataset Insights
+- Unique Categories: 5 (Tops, Shoes, Bags, Home, Accessories)
+- Unique Products: 50 (Product 1 → Product 50)
+- Unique Prices: 50 (range: 9.99 → 64.79, all distinct)
+✅ Balanced catalog with diverse items & unique prices.
 
 ## ☁ Deployment
 - ✅ Run locally via Flask
-- ✅ Deploy with Docker + Render/Heroku
-- ✅ Persist cache/ & data/index.csv across runs
+- ✅ Deploy with Docker + Render
+- ✅ Pre-download model with `download_model.py` for faster startup
 
 ## 📸 Screenshots
-
-
